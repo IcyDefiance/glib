@@ -1,20 +1,20 @@
 import { Frozen, Immutable } from "./decorators";
 
-export interface IOption<T> {
-	andThen<U>(cb: (val: T) => IOption<U>): IOption<U>;
+export interface Option<T> {
+	andThen<U>(cb: (val: T) => Option<U>): Option<U>;
 	isSome(): boolean;
 	isNone(): boolean;
-	map<U>(cb: (val: T) => U): IOption<U>;
+	map<U>(cb: (val: T) => U): Option<U>;
 	match<U>(matcher: IOptionMatcher<T, U>): U;
 	unwrapOrElse(alt: () => T): T;
 }
 
 @Frozen
 @Immutable
-export class Some<T> implements IOption<T> {
+export class Some<T> implements Option<T> {
 	constructor(private val: T) {}
 
-	andThen<U>(cb: (val: T) => IOption<U>): IOption<U> {
+	andThen<U>(cb: (val: T) => Option<U>): Option<U> {
 		return cb(this.val);
 	}
 
@@ -41,7 +41,7 @@ export class Some<T> implements IOption<T> {
 
 @Frozen
 @Immutable
-export class None implements IOption<never> {
+export class None implements Option<never> {
 	andThen(): None {
 		return this;
 	}

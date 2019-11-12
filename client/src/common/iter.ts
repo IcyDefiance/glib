@@ -1,5 +1,5 @@
 import { Frozen, Immutable } from "./decorators";
-import { IOption, some, none } from "./option";
+import { Option, some, none } from "./option";
 
 export function iter<T>(iterable: { [key: string]: T }): Iter<[string, T]>;
 export function iter<T>(iterable: Iterable<T>): Iter<T>;
@@ -70,7 +70,7 @@ export abstract class Iter<T> implements Iterable<T> {
 		}
 	}
 
-	nth(index: number): IOption<T> {
+	nth(index: number): Option<T> {
 		for (const item of this.inner()) {
 			if (index <= 0) {
 				return some(item);
@@ -121,10 +121,7 @@ function* enumerate<T>(iter: Iterable<T>): IterableIterator<[number, T]> {
 	}
 }
 
-function* filter<T>(
-	iter: Iterable<T>,
-	cb: (item: T) => boolean
-): IterableIterator<T> {
+function* filter<T>(iter: Iterable<T>, cb: (item: T) => boolean): IterableIterator<T> {
 	for (const item of iter) {
 		if (cb(item)) {
 			yield item;
@@ -140,20 +137,14 @@ function* flatten<T>(iter: Iterable<Iterable<T>>): IterableIterator<T> {
 	}
 }
 
-function* inspect<T>(
-	iter: Iterable<T>,
-	cb: (item: T) => void
-): IterableIterator<T> {
+function* inspect<T>(iter: Iterable<T>, cb: (item: T) => void): IterableIterator<T> {
 	for (const item of iter) {
 		cb(item);
 		yield item;
 	}
 }
 
-function* map<T, U>(
-	iter: Iterable<T>,
-	cb: (item: T) => U
-): IterableIterator<U> {
+function* map<T, U>(iter: Iterable<T>, cb: (item: T) => U): IterableIterator<U> {
 	for (const item of iter) {
 		yield cb(item);
 	}
@@ -204,10 +195,7 @@ class ObjIter<T> extends Iter<[string, T]> {
 @Frozen
 @Immutable
 class TransformIter<I, O> extends Iter<O> {
-	constructor(
-		private iter: Iterable<I>,
-		private transform: (iterable: Iterable<I>) => Iterator<O>
-	) {
+	constructor(private iter: Iterable<I>, private transform: (iterable: Iterable<I>) => Iterator<O>) {
 		super();
 	}
 
