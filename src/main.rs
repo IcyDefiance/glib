@@ -1,17 +1,18 @@
 mod layouts;
 
 use actix_files::{Files, NamedFile};
-use actix_web::{middleware::Logger, web, App, HttpResponse, HttpServer, Responder};
-use chrono::{offset::Utc, serde::ts_milliseconds, DateTime};
+use actix_web::{middleware::Logger, web, web::Query, App, HttpResponse, HttpServer, Responder};
+use chrono::{prelude::*, serde::ts_milliseconds};
 use lazy_static::lazy_static;
 use listenfd::ListenFd;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{collections::VecDeque, sync::RwLock};
 
 const MAX_OBJECTS: usize = 256;
 
 lazy_static! {
 	static ref OBJECTS: RwLock<VecDeque<Event>> = RwLock::default();
+	static ref EPOCH: DateTime<Utc> = Utc.ymd(1970, 1, 1).and_hms(0, 0, 0);
 }
 
 fn main() {
@@ -41,8 +42,20 @@ fn index() -> impl Responder {
 	NamedFile::open("client/dist/index.html")
 }
 
-fn fetch() -> impl Responder {
-	HttpResponse::Ok().json(&*OBJECTS.read().unwrap())
+#[derive(Deserialize)]
+struct FetchParams {
+	#[serde(with = "ts_milliseconds")]
+	#[serde(default = "epoch")]
+	since: DateTime<Utc>,
+}
+fn fetch(query: Query<FetchParams>) -> impl Responder {
+	let mut ok = HttpResponse::Ok();
+	let objs = OBJECTS.read().unwrap();
+	if query.since == *EPOCH {
+		ok.json(&*objs)
+	} else {
+		ok.json(objs.iter().filter(|x| x.time >= query.since).collect::<Vec<&Event>>())
+	}
 }
 
 fn publish(body: String) -> impl Responder {
@@ -62,4 +75,8 @@ struct Event {
 	#[serde(with = "ts_milliseconds")]
 	time: DateTime<Utc>,
 	data: String,
+}
+
+fn epoch() -> DateTime<Utc> {
+	*EPOCH
 }
