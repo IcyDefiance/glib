@@ -1,7 +1,7 @@
 mod layouts;
 
 use actix_files::{Files, NamedFile};
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{middleware::Logger, web, App, HttpResponse, HttpServer, Responder};
 use chrono::{offset::Utc, serde::ts_milliseconds, DateTime};
 use lazy_static::lazy_static;
 use listenfd::ListenFd;
@@ -15,8 +15,12 @@ lazy_static! {
 }
 
 fn main() {
+	std::env::set_var("RUST_LOG", "actix_web=info");
+	env_logger::init();
+
 	let mut server = HttpServer::new(|| {
 		App::new()
+			.wrap(Logger::default())
 			.service(
 				web::scope("/api").route("/fetch", web::get().to(fetch)).route("/publish", web::post().to(publish)),
 			)
