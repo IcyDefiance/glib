@@ -1,17 +1,29 @@
 mod layouts;
 
 use actix_files::{Files, NamedFile};
-use actix_web::{middleware::Logger, web, web::Query, App, HttpResponse, HttpServer, Responder};
+use actix_web::{
+	http::header::{CacheControl, CacheDirective, ACCESS_CONTROL_ALLOW_ORIGIN},
+	middleware::Logger,
+	web,
+	web::{Bytes, Query},
+	App, HttpResponse, HttpServer, Responder,
+};
 use chrono::{prelude::*, serde::ts_milliseconds};
+use futures::sync::mpsc::{channel, Sender};
 use lazy_static::lazy_static;
 use listenfd::ListenFd;
 use serde::{Deserialize, Serialize};
-use std::{collections::VecDeque, sync::RwLock};
+use serde_json::to_string;
+use std::{
+	collections::{HashSet, VecDeque},
+	sync::{Mutex, RwLock},
+};
 
 const MAX_OBJECTS: usize = 256;
 
 lazy_static! {
 	static ref OBJECTS: RwLock<VecDeque<Event>> = RwLock::default();
+	static ref STREAMS: Mutex<Vec<Sender<Bytes>>> = Mutex::default();
 	static ref EPOCH: DateTime<Utc> = Utc.ymd(1970, 1, 1).and_hms(0, 0, 0);
 }
 
@@ -23,7 +35,10 @@ fn main() {
 		App::new()
 			.wrap(Logger::default())
 			.service(
-				web::scope("/api").route("/fetch", web::get().to(fetch)).route("/publish", web::post().to(publish)),
+				web::scope("/api")
+					.route("/fetch", web::get().to(fetch))
+					.route("/publish", web::post().to(publish))
+					.route("/stream", web::get().to(stream)),
 			)
 			.route("/", web::get().to(index))
 			.service(Files::new("/", "client/dist"))
@@ -59,15 +74,48 @@ fn fetch(query: Query<FetchParams>) -> impl Responder {
 }
 
 fn publish(body: String) -> impl Responder {
-	let mut objs = OBJECTS.write().unwrap();
-	if objs.len() == MAX_OBJECTS {
-		objs.pop_front();
-	}
-
 	let event = Event { time: Utc::now(), data: body };
 	let res = HttpResponse::Ok().content_type("application/json").json(&event);
-	objs.push_back(event);
+
+	{
+		let mut closed = HashSet::new();
+		let mut streams = STREAMS.lock().unwrap();
+		for (i, send) in streams.iter_mut().enumerate() {
+			if !send
+				.try_send(format!("event: object-data\ndata: {}\n\n", to_string(&event).unwrap()).into())
+				.map(|_| true)
+				.unwrap_or_else(|e| e.is_full())
+			{
+				closed.insert(i);
+			}
+		}
+		if closed.len() > 0 {
+			println!("closed");
+			*streams =
+				streams.iter().enumerate().filter(|(i, _)| !closed.contains(i)).map(|(_, send)| send.clone()).collect();
+		}
+	}
+
+	{
+		let mut objs = OBJECTS.write().unwrap();
+		if objs.len() == MAX_OBJECTS {
+			objs.pop_front();
+		}
+		objs.push_back(event);
+	}
+
 	res
+}
+
+fn stream() -> impl Responder {
+	let (mut send, rec) = channel(1024 * 1024);
+	send.try_send(format!("event: server-time\ndata: {}\n\n", Utc::now().timestamp_millis()).into()).unwrap();
+	STREAMS.lock().unwrap().push(send);
+	HttpResponse::Ok()
+		.content_type("text/event-stream")
+		.set(CacheControl(vec![CacheDirective::NoStore]))
+		.header(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+		.streaming(rec)
 }
 
 #[derive(Serialize)]
