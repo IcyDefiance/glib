@@ -1,21 +1,34 @@
 import * as React from "react";
-import { useObservable } from "rxjs-hooks";
-import { createAccount, user$ } from "src/state/user";
-import { Button } from "../../material/button";
+import { LayoutGrid } from "src/components/material/layout-grid";
+import { TextField } from "src/components/material/text-field";
+import { Button } from "src/components/material/button";
+import styled from "styled-components";
 
-const evtSource = new EventSource("/api/stream");
-evtSource.addEventListener("object-data", ev => console.log(ev));
+const Container = styled(LayoutGrid)`
+	max-width: 1200px;
+`;
 
 export const Home: React.FC = () => {
-	const user = useObservable(() => user$);
+	const [post, setPost] = React.useState("");
 
 	return (
-		<div className="mt-3">
-			{user &&
-				user.match({
-					some: key => <>Logged in. Public key: {key.key}</>,
-					none: () => <Button onClick={() => createAccount()}>Create Account</Button>,
-				})}
-		</div>
+		<Container className="container mt-3">
+			<LayoutGrid.Cell span={12}>
+				<TextField fullwidth noLabel textarea>
+					<TextField.Textarea
+						label="Create a new post"
+						value={post}
+						onChange={e => setPost(e.target.value)}
+					/>
+				</TextField>
+				<div className="d-flex justify-content-end">
+					<Button onClick={() => createPost(post)}>Submit</Button>
+				</div>
+			</LayoutGrid.Cell>
+		</Container>
 	);
 };
+
+function createPost(post: string) {
+	console.log(post);
+}

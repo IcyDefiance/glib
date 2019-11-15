@@ -17,6 +17,8 @@ use serde_json::to_string;
 use std::{
 	collections::{HashSet, VecDeque},
 	sync::{Mutex, RwLock},
+	thread,
+	time::Duration,
 };
 
 const MAX_OBJECTS: usize = 256;
@@ -30,6 +32,8 @@ lazy_static! {
 fn main() {
 	std::env::set_var("RUST_LOG", "actix_web=info");
 	env_logger::init();
+
+	init_pinger();
 
 	let mut server = HttpServer::new(|| {
 		App::new()
@@ -51,6 +55,21 @@ fn main() {
 	};
 
 	server.run().unwrap();
+}
+
+fn init_pinger() {
+	thread::spawn(move || {
+		loop {
+			thread::sleep(Duration::from_secs(60));
+
+			let mut streams = STREAMS.lock().unwrap();
+			for send in streams.iter_mut() {
+				if let Err(err) = send.try_send("event: ping\ndata: {}\n\n".into()) {
+					println!("{}", err);
+				}
+			}
+		}
+	});
 }
 
 fn index() -> impl Responder {
@@ -77,24 +96,7 @@ fn publish(body: String) -> impl Responder {
 	let event = Event { time: Utc::now(), data: body };
 	let res = HttpResponse::Ok().content_type("application/json").json(&event);
 
-	{
-		let mut closed = HashSet::new();
-		let mut streams = STREAMS.lock().unwrap();
-		for (i, send) in streams.iter_mut().enumerate() {
-			if !send
-				.try_send(format!("event: object-data\ndata: {}\n\n", to_string(&event).unwrap()).into())
-				.map(|_| true)
-				.unwrap_or_else(|e| e.is_full())
-			{
-				closed.insert(i);
-			}
-		}
-		if closed.len() > 0 {
-			println!("closed");
-			*streams =
-				streams.iter().enumerate().filter(|(i, _)| !closed.contains(i)).map(|(_, send)| send.clone()).collect();
-		}
-	}
+	let json = to_string(&event).unwrap();
 
 	{
 		let mut objs = OBJECTS.write().unwrap();
@@ -102,6 +104,24 @@ fn publish(body: String) -> impl Responder {
 			objs.pop_front();
 		}
 		objs.push_back(event);
+	}
+
+	{
+		let mut closed = HashSet::new();
+		let mut streams = STREAMS.lock().unwrap();
+		for (i, send) in streams.iter_mut().enumerate() {
+			if !send
+				.try_send(format!("event: object-data\ndata: {}\n\n", json).into())
+				.map(|_| true)
+				.unwrap_or_else(|e| e.is_full())
+			{
+				closed.insert(i);
+			}
+		}
+		if closed.len() > 0 {
+			*streams =
+				streams.iter().enumerate().filter(|(i, _)| !closed.contains(i)).map(|(_, send)| send.clone()).collect();
+		}
 	}
 
 	res

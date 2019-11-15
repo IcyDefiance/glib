@@ -213,59 +213,7 @@ self.addEventListener("install", function(e) {
 		caches.open("glib-app").then(function(cache) {
 			return cache.addAll([]);
 			// wait 3.5s before "really" installing the PWA...
-			cache.addAll([
-				"/",
-				"/index.html",
-				"/glib.webmanifest",
-				"/service-worker.js",
-				"/vm/glib-vm.wasm",
-				"/glib.js",
-			]);
-		}),
-	);
-});
-self.addEventListener("fetch", function(e) {
-	var u = db ? new URL(e.request.url) : {};
-	if (u.pathname == "/api/fetch") {
-		fetch(e.request.clone());
-		e.respondWith(
-			new Promise(function(resolve, reject) {
-				try {
-					var request = dbRead(u.searchParams.get("table"), u.searchParams.get("key"));
-					request.addEventListener("error", reject);
-					request.addEventListener("success", function() {
-						var o = request.result ? request.result : {};
-						resolve(new Response(JSON.stringify(o), { status: 200, statusText: "OK" }));
-					});
-				} catch (err) {
-					reject(err);
-				}
-			}),
-		);
-		return;
-	} else if (u.pathname == "/api/publish") {
-		fetch(e.request.clone());
-		e.respondWith(
-			new Promise(function(resolve, reject) {
-				try {
-					e.request.json().then(function(value) {
-						var request = dbWrite(u.searchParams.get("table"), value);
-						request.addEventListener("error", reject);
-						request.addEventListener("success", function() {
-							resolve(new Response('{"ok":true}', { status: 200, statusText: "OK" }));
-						});
-					});
-				} catch (err) {
-					reject(err);
-				}
-			}),
-		);
-		return;
-	}
-	e.respondWith(
-		caches.match(e.request).then(function(response) {
-			if (response) return response;
-			return fetch(e.request);
+			cache.addAll(["/", "/index.html", "/glib.webmanifest", "/service-worker.js", "/vm/glib-vm.wasm", "/glib1"]);
 		}),
 	);
 });
