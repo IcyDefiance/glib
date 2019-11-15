@@ -1,4 +1,4 @@
-enum CertificateType {
+export enum CertificateType {
 	GroupInvite,
 	GroupMember,
 	DeviceConfig,
@@ -6,7 +6,7 @@ enum CertificateType {
 	DomainNameAuthority,
 	RadioNameAuthority,
 }
-enum ObjectType {
+export enum ObjectType {
 	Custom,
 	Device,
 	Person,
@@ -17,9 +17,18 @@ enum ObjectType {
 	Certificate,
 	Deletion,
 }
-type AccountType = ObjectType.Person | ObjectType.Group | ObjectType.Host;
+export type AccountType = ObjectType.Person | ObjectType.Group | ObjectType.Host;
 
-type NetworkObject = Certificate | Device | Host | Account | Group | Message | Reaction | Deletion | CustomObject;
+export type NetworkObject =
+	| Certificate
+	| Device
+	| Host
+	| Account
+	| Group
+	| Message
+	| Reaction
+	| Deletion
+	| CustomObject;
 
 /**
  * An ID generated from the other fields in the object, except the signature.
@@ -27,7 +36,7 @@ type NetworkObject = Certificate | Device | Host | Account | Group | Message | R
  * You can merge the signatures of two objects with the same ID without changing the ID, but if the value of any other
  * field changes, so will the ID.
  */
-type AutoID = string;
+export type AutoID = string;
 
 /**
  * Acceptable formats:
@@ -40,35 +49,35 @@ type AutoID = string;
  * * The first character must be `A-Z` or `a-z`
  * * Comparison is not case-sensitive
  */
-type Handle = string;
+export type Handle = string;
 
 /**
  * An integer value representing the number of milliseconds since January 1, 1970, 00:00:00.
  */
-type Timestamp = number;
+export type Timestamp = number;
 
 /**
  * A public key suitable for long term signing.
  */
-type AccountKey = string;
-type AccountSignature = string; // long string... 52KB (as base64)
+export type AccountKey = string;
+export type AccountSignature = string; // long string... 52KB (as base64)
 
 /**
  * A public key suitable for encryption and/or short term signing.
  */
-type DeviceKey = string;
-type DeviceSignature = string;
+export type DeviceKey = string;
+export type DeviceSignature = string;
 
 /**
  * Open tends to be the best UX. Closed tends to be the best security.
  */
-enum SecurityUXTradeoff {
+export enum SecurityUXTradeoff {
 	Open,
 	Balanced,
 	Closed,
 }
 
-interface BaseObject {
+export interface BaseObject {
 	id: AutoID;
 	timestamp?: Timestamp;
 	/**
@@ -100,7 +109,7 @@ interface BaseObject {
 	to: AutoID[];
 }
 
-interface Account extends BaseObject {
+export interface Account extends BaseObject {
 	type: AccountType;
 	key: AccountKey | null;
 }
@@ -110,7 +119,7 @@ interface Account extends BaseObject {
  * Create a Host object and public key, sign it with that same key, serve it from the API endpoint on the domain it's
  * claiming to be.
  */
-interface Host extends Account {
+export interface Host extends Account {
 	type: ObjectType.Host;
 	/**
 	 * The DNS address of the instance. (eg. `example.tld`)
@@ -131,7 +140,7 @@ interface Host extends Account {
  * the host adds their signature to it also and sends it back to you. Optionally fill in the real name and have it also
  * signed by whatever entity is trusted to verify real names.
  */
-interface User extends Account {
+export interface User extends Account {
 	/**
 	 * Must be signed by the matching host, otherwise it will be replaced with `null` when unpacking.
 	 */
@@ -153,7 +162,7 @@ interface User extends Account {
  * Create a Group object and public key, sign it with that same key, serve it from the API endpoint on the domain it's
  * claiming to be.
  */
-interface Group extends Account {
+export interface Group extends Account {
 	type: ObjectType.Group;
 	name: string;
 	admins: Handle[];
@@ -195,7 +204,7 @@ interface Group extends Account {
 	viewPolicy: SecurityUXTradeoff;
 }
 
-enum DevicePlatform {
+export enum DevicePlatform {
 	Desktop,
 	Server,
 	Browser,
@@ -205,13 +214,13 @@ enum DevicePlatform {
 	Appliance,
 }
 
-interface Device extends BaseObject {
+export interface Device extends BaseObject {
 	type: ObjectType.Device;
 	key: DeviceKey;
 	platform: DevicePlatform;
 }
 
-interface Message extends BaseObject {
+export interface Message extends BaseObject {
 	type: ObjectType.Message;
 	text: string;
 	title: string | null;
@@ -221,12 +230,12 @@ interface Message extends BaseObject {
 	author: AutoID;
 }
 
-interface CustomObject extends BaseObject {
+export interface CustomObject extends BaseObject {
 	type: ObjectType.Custom;
 	customType: string;
 }
 
-enum ReactionType {
+export enum ReactionType {
 	Like,
 	Love,
 	Laugh,
@@ -235,44 +244,44 @@ enum ReactionType {
 	Angry,
 }
 
-interface Reaction extends BaseObject {
+export interface Reaction extends BaseObject {
 	type: ObjectType.Reaction;
 	react: ReactionType;
 	replyTo: AutoID;
 	author: AutoID;
 }
 
-interface Deletion extends BaseObject {
+export interface Deletion extends BaseObject {
 	type: ObjectType.Deletion;
 	target: AutoID[];
 }
 
-interface Certificate extends BaseObject {
+export interface Certificate extends BaseObject {
 	type: ObjectType.Certificate;
 	cert: CertificateType;
 	valid: Timestamp;
 	expires: Timestamp;
 }
 
-interface GroupInvite extends Certificate {
+export interface GroupInvite extends Certificate {
 	cert: CertificateType.GroupInvite;
 	person: Handle;
 }
 
-enum GroupMemberRank {
+export enum GroupMemberRank {
 	Reader,
 	Poster,
 	Admin,
 	Owner,
 }
 
-interface GroupMember extends Certificate {
+export interface GroupMember extends Certificate {
 	cert: CertificateType.GroupMember;
 	person: Handle;
 	rank: GroupMemberRank;
 }
 
-interface DeviceConfig extends Certificate {
+export interface DeviceConfig extends Certificate {
 	cert: CertificateType.DeviceConfig;
 	account: AutoID;
 	device: AutoID;
