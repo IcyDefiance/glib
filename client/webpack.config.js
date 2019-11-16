@@ -12,25 +12,7 @@ module.exports = env => {
 	return [
 		{
 			mode,
-			entry: "./src/electron.ts",
-			target: "electron-main",
-			devtool: "source-map",
-			module: { rules: [{ test: /\.ts$/, include: /src/, use: [{ loader: "ts-loader" }] }] },
-			output: { path: __dirname + "/dist", filename: "electron.js" },
-			node: { __dirname: false },
-		},
-		{
-			mode,
-			entry: "./src/preload.ts",
-			target: "electron-preload",
-			devtool: "source-map",
-			module: { rules: [{ test: /\.ts$/, include: /src/, use: [{ loader: "ts-loader" }] }] },
-			output: { path: __dirname + "/dist", filename: "preload.js" },
-			node: { __dirname: false },
-		},
-		{
-			mode,
-			entry: "./src/react.tsx",
+			entry: "./src/main.tsx",
 			target: "web",
 			devtool: "source-map",
 			module: {
@@ -71,6 +53,14 @@ module.exports = env => {
 				fs: "empty",
 				path: "empty",
 			},
+			devServer: {
+				proxy: {
+					"/api": {
+						target: "https://dev.glib.app",
+						secure: false,
+					},
+				},
+			},
 		},
 		{
 			mode,
@@ -78,6 +68,24 @@ module.exports = env => {
 			target: "web",
 			devtool: "source-map",
 			output: { path: __dirname + "/dist", filename: "service-worker.js" },
+		},
+		{
+			mode,
+			entry: "./src/electron.ts",
+			target: "electron-main",
+			devtool: "source-map",
+			module: { rules: [{ test: /\.ts$/, include: /src/, use: [{ loader: "ts-loader" }] }] },
+			output: { path: __dirname + "/dist", filename: "electron.js" },
+			node: { __dirname: false },
+		},
+		{
+			mode,
+			entry: "./src/preload.ts",
+			target: "electron-preload",
+			devtool: "source-map",
+			module: { rules: [{ test: /\.ts$/, include: /src/, use: [{ loader: "ts-loader" }] }] },
+			output: { path: __dirname + "/dist", filename: "preload.js" },
+			node: { __dirname: false },
 		},
 	];
 };
