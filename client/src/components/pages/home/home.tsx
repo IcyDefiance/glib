@@ -3,6 +3,7 @@ import * as React from "react";
 import { useObservable } from "rxjs-hooks";
 import { scan, tap } from "rxjs/operators";
 import { Button } from "src/components/material/button";
+import { Card } from "src/components/material/card";
 import { LayoutGrid } from "src/components/material/layout-grid";
 import { TextField } from "src/components/material/text-field";
 import { Message } from "src/glib/layouts";
@@ -38,15 +39,14 @@ export const Home: React.FC = () => {
 						<Button onClick={() => createPost(post)}>Submit</Button>
 					</div>
 				</LayoutGrid.Cell>
-				<LayoutGrid.Cell span={12}>
+				<LayoutGrid.Cell span={12} className="mt-n3">
 					{objs &&
 						iter(objs)
 							.enumerate()
 							.map(([i, obj]) => (
-								<React.Fragment key={i}>
+								<Card key={i} className="p-3 mt-3">
 									{obj.text}
-									<hr />
-								</React.Fragment>
+								</Card>
 							))}
 				</LayoutGrid.Cell>
 			</Container>

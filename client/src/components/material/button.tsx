@@ -22,11 +22,7 @@ const ButtonFn: React.FC<ButtonProps> = props => {
 	delete htmlProps.color;
 	delete htmlProps.dense;
 
-	return (
-		<button ref={ref} {...htmlProps} className={`mdc-button ${color} ${dense} ${props.className || ""}`}>
-			{props.children}
-		</button>
-	);
+	return <button ref={ref} {...htmlProps} className={`mdc-button ${color} ${dense} ${props.className || ""}`} />;
 };
 
 const Icon: React.FC<IconProps> = props => (
