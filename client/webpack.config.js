@@ -49,18 +49,8 @@ module.exports = env => {
 					ignoreOrder: false, // Enable to remove warnings about conflicting order
 				}),
 			],
-			node: {
-				fs: "empty",
-				path: "empty",
-			},
-			devServer: {
-				proxy: {
-					"/api": {
-						target: "https://dev.glib.app",
-						secure: false,
-					},
-				},
-			},
+			node: { fs: "empty", path: "empty" },
+			devServer: { proxy: { "/api": { target: "https://dev.glib.app", changeOrigin: true } } },
 		},
 		{
 			mode,
