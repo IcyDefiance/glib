@@ -49,7 +49,7 @@ module.exports = env => {
 					ignoreOrder: false, // Enable to remove warnings about conflicting order
 				}),
 			],
-			node: {
+			browser: {
 				fs: "empty",
 				path: "empty",
 			},
