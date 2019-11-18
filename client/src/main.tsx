@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import { App } from "./components/app";
-import * as serviceWorker from "./service-worker";
+import * as serviceWorker from "./service-worker-api";
 import "./styles.scss";
 
 document.body.className = "mdc-typography";

@@ -53,6 +53,14 @@ module.exports = env => {
 		},
 		{
 			mode,
+			entry: "./src/service-worker.ts",
+			target: "web",
+			devtool: "source-map",
+			module: { rules: [{ test: /\.ts$/, use: ["ts-loader"] }] },
+			output: { path: __dirname + "/dist", filename: "service-worker.js" },
+		},
+		{
+			mode,
 			entry: "./src/electron.ts",
 			target: "electron-main",
 			devtool: "source-map",
