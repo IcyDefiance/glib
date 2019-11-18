@@ -19,7 +19,6 @@ module.exports = env => {
 				rules: [
 					{
 						test: /\.tsx?$/,
-						include: /src/,
 						use: [
 							{ loader: "babel-loader", options: { plugins: ["babel-plugin-styled-components"] } },
 							"ts-loader",
@@ -51,13 +50,6 @@ module.exports = env => {
 			],
 			node: { fs: "empty", path: "empty" },
 			devServer: { proxy: { "/api": { target: "https://dev.glib.app", changeOrigin: true } } },
-		},
-		{
-			mode,
-			entry: "./src/service-worker.js",
-			target: "web",
-			devtool: "source-map",
-			output: { path: __dirname + "/dist", filename: "service-worker.js" },
 		},
 		{
 			mode,

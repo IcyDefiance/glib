@@ -7,7 +7,7 @@ import { Card } from "src/components/material/card";
 import { LayoutGrid } from "src/components/material/layout-grid";
 import { TextField } from "src/components/material/text-field";
 import { Message } from "src/glib/layouts";
-import { createMessage, messages$, publish } from "src/state/objects";
+import { createMessage, publish } from "src/state/objects";
 import styled from "styled-components";
 
 const Container = styled(LayoutGrid)`
@@ -17,12 +17,12 @@ const Container = styled(LayoutGrid)`
 export const Home: React.FC = () => {
 	const [post, setPost] = React.useState("");
 
-	const objs = useObservable(() =>
-		messages$.pipe(
-			tap(msg => console.log(msg.text)),
-			scan((acc: Message[], val) => [...acc, val], []),
-		),
-	);
+	// const objs = useObservable(() =>
+	// 	messages$.pipe(
+	// 		tap(msg => console.log(msg.text)),
+	// 		scan((acc: Message[], val) => [...acc, val], []),
+	// 	),
+	// );
 
 	return (
 		<>
@@ -39,7 +39,7 @@ export const Home: React.FC = () => {
 						<Button onClick={() => createPost(post)}>Submit</Button>
 					</div>
 				</LayoutGrid.Cell>
-				<LayoutGrid.Cell span={12} className="mt-n3">
+				{/* <LayoutGrid.Cell span={12} className="mt-n3">
 					{objs &&
 						iter(objs)
 							.enumerate()
@@ -48,7 +48,7 @@ export const Home: React.FC = () => {
 									{obj.text}
 								</Card>
 							))}
-				</LayoutGrid.Cell>
+				</LayoutGrid.Cell> */}
 			</Container>
 		</>
 	);

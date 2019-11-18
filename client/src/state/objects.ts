@@ -3,23 +3,19 @@ import { filter } from "rxjs/operators";
 import * as Glib from "../glib/glib.js";
 import { AutoID, Message, NetworkObject, ObjectType } from "../glib/layouts";
 
-let evtSource = new EventSource("/api/stream");
-evtSource.addEventListener("message", event =>
-	objsS.next(Glib.UnpackObject(JSON.parse((event as MessageEvent).data)[0].data)),
-);
+// let evtSource = new EventSource("/api/stream");
+// evtSource.addEventListener("message", event =>
+// 	objsS.next(Glib.Object.Unpack(JSON.parse((event as MessageEvent).data)[0].data)),
+// );
 
-const objsS = new Subject<NetworkObject>();
-export const objs$ = objsS.asObservable();
-export const messages$ = objs$.pipe(filter(obj => obj.type == ObjectType.Message)) as Observable<Message>;
+// const objsS = new Subject<NetworkObject>();
+// export const objs$ = objsS.asObservable();
+// export const messages$ = objs$.pipe(filter(obj => obj.type == ObjectType.Message)) as Observable<Message>;
 
-objs$.subscribe(obj => console.log("stream", obj));
+// objs$.subscribe(obj => Glib.Object.Load(obj));
 
 export async function publish(obj: NetworkObject) {
-	console.log("publish", obj);
-	const body = Glib.PackObject(obj);
-	const headers = { "Content-Type": "application/octet-stream" };
-	const res = await fetch("/api/publish", { method: "POST", body, headers });
-	return res.json();
+	Glib.Object.Publish(obj);
 }
 
 export function createMessage(
