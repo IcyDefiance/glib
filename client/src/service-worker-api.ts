@@ -1,6 +1,10 @@
-export function register() {
-	if (navigator.serviceWorker) {
-		// Use the window load event to keep the page load performant
-		window.addEventListener("load", () => navigator.serviceWorker.register("/service-worker.js"));
-	}
+export function register(): Promise<ServiceWorkerRegistration> {
+	return new Promise((resolve, reject) =>
+		window.addEventListener("load", () =>
+			navigator.serviceWorker
+				.register("/service-worker.js")
+				.then(resolve)
+				.catch(reject),
+		),
+	);
 }
