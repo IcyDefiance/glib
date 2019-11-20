@@ -1,4 +1,4 @@
 import { registerRoute } from "workbox-routing";
-import { StaleWhileRevalidate } from "workbox-strategies";
+import { NetworkFirst } from "workbox-strategies";
 
-registerRoute(/\.js$/, new StaleWhileRevalidate());
+registerRoute(/\.js$/, new NetworkFirst());

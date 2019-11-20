@@ -4,7 +4,6 @@ import { App } from "./components/app";
 import * as serviceWorker from "./service-worker-api";
 import "./styles.scss";
 
-document.body.className = "mdc-typography";
 ReactDOM.render(<App />, document.getElementById("app"));
 
 // If you want your app to work offline and load faster, you can change
