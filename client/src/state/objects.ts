@@ -5,28 +5,32 @@ import { register } from "src/service-worker-api";
 (async () => {
 	const sw = await register();
 
-	const tabid = Math.random();
 	let streaming = false;
+
+	const tabid = Math.random();
 	const poll = async () => {
 		const res = await fetch(`sw/should-stream?id=${tabid}`);
-		streaming = await res.json();
-		console.log("streaming", streaming);
+		if (!streaming) {
+			streaming = await res.json();
+			if (streaming) {
+				// start stream
+				console.log("streaming");
+			}
+		}
 	};
-	window.addEventListener("beforeunload", () => streaming && sw.active!.postMessage("end-stream"));
+
+	window.addEventListener("storage", poll);
+	window.addEventListener("beforeunload", () => {
+		if (streaming) {
+			window.removeEventListener("storage", poll);
+			sw.active!.postMessage("end-stream");
+			localStorage.setItem("end-stream", "");
+		}
+	});
+
 	setInterval(poll, 60000);
 	poll();
 })();
-
-// let evtSource = new EventSource("/api/stream");
-// evtSource.addEventListener("message", event =>
-// 	objsS.next(Glib.Object.Unpack(JSON.parse((event as MessageEvent).data)[0].data)),
-// );
-
-// const objsS = new Subject<NetworkObject>();
-// export const objs$ = objsS.asObservable();
-// export const messages$ = objs$.pipe(filter(obj => obj.type == ObjectType.Message)) as Observable<Message>;
-
-// objs$.subscribe(obj => Glib.Object.Load(obj));
 
 export async function publish(obj: NetworkObject) {
 	Glib.Object.Publish(obj);

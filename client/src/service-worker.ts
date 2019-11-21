@@ -3,9 +3,9 @@ import { openDB } from "idb";
 import { registerRoute, RouteHandlerCallbackContext } from "workbox-routing";
 import { NetworkFirst } from "workbox-strategies";
 
-const dbPromise = openDB("streaming", 1, {
+const dbPromise = openDB("glib.app/sw", 1, {
 	upgrade: (db, _, _1, _2) => {
-		db.createObjectStore("streaming");
+		db.createObjectStore("state");
 	},
 });
 
@@ -18,8 +18,6 @@ registerRoute(
 		const [streamingId, streamingTime] = (await getStreamingState()) || [null, null];
 		const id = Number(new URL(context.request!.url).searchParams.get("id")!);
 
-		console.log(streamingId, streamingTime, id);
-
 		if (streamingId === null || id === streamingId || differenceInMinutes(now, streamingTime!) >= 2) {
 			await setStreamingState(id, now);
 			return makeStreamingResponse(true);
@@ -31,16 +29,15 @@ registerRoute(
 );
 
 addEventListener("message", async event => {
-	console.log(event.data);
 	if (event.data === "end-stream") {
 		const db = await dbPromise;
-		db.delete("streaming", "key");
+		db.delete("state", "streaming");
 	}
 });
 
 async function getStreamingState(): Promise<[number, Date] | null> {
 	const db = await dbPromise;
-	const streaming = await db.get("streaming", "key");
+	const streaming = await db.get("state", "streaming");
 	if (streaming) {
 		const [id, time] = JSON.parse(streaming) as [number, number];
 		return [id, new Date(time)];
@@ -51,8 +48,8 @@ async function getStreamingState(): Promise<[number, Date] | null> {
 
 async function setStreamingState(id: number, time: Date) {
 	const db = await dbPromise;
-	db.delete("streaming", "key");
-	db.add("streaming", JSON.stringify([id, time]), "key");
+	db.delete("state", "streaming");
+	db.add("state", JSON.stringify([id, time]), "streaming");
 }
 
 function makeStreamingResponse(val: boolean) {

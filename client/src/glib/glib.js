@@ -11,6 +11,12 @@ const CryptoCodecVM = require("../../bin/crypto-codec");
 	var objectCache = {};
 	var vm = new CryptoCodecVM();
 	vm.then(BootVM);
+	if (navigator.serviceWorker) {
+		navigator.serviceWorker.register("/service-worker.js");
+		navigator.serviceWorker.ready.then(function(reg) {
+			sw = reg;
+		});
+	}
 	window.addEventListener(
 		"message",
 		function(e) {
@@ -20,7 +26,14 @@ const CryptoCodecVM = require("../../bin/crypto-codec");
 	);
 
 	var sessionID = null;
-	var since = Date.now() - 1000 * 60 * 60 * 24;
+	var since = Date.now() - 1000 * 60 * 60 * 24 * 7;
+	if (window.localStorage) {
+		if (localStorage.since) {
+			var s = parseFloat(localStorage.since);
+			if (!isNaN(s)) since = s;
+		}
+		localStorage.since = since;
+	}
 	var eventSrc = new EventSource("/api/stream?since=" + since);
 	var timeOffset = 0;
 	var timeMargin = 5000;
